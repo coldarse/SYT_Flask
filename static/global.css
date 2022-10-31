@@ -1,0 +1,87 @@
+.message {
+    font-weight: 600;
+    color: blue;
+}
+
+.navbar {
+    background-color: lightslategray;
+    font-size: 1em;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    color: white;
+    padding: 8px 5px 8px 5px;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.navbar-brand {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.navbar-item {
+    font-variant: small-caps;
+    margin-left: 30px;
+}
+
+.body-content {
+    padding: 5px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-circle-online {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: greenyellow;
+    border: 2px solid grey;
+    bottom: 0;
+    right: 0;
+}
+
+.status-circle-offline {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: red;
+    border: 2px solid grey;
+    bottom: 0;
+    right: 0;
+}
+
+.status-circle-undefined {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: lightgray;
+    border: 2px solid grey;
+    bottom: 0;
+    right: 0;
+}
+
+.flex-status{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.card {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    width: 250px;
+    border-radius: 20px;
+    margin: 1.5rem;
+    min-width: 250px;
+}
+
+.container {
+    padding: 2px 16px;
+}
+
+.dashboard-content{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}

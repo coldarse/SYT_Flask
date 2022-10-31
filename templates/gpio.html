@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}
+    GPIO
+{% endblock %}
+{% block content %}
+    {% if no %}
+
+        {%for i in range(0, len)%} 
+        <h4 style="font-weight: 200;">{{gpios[i]['Name']}}</h4> 
+        <h5 style="font-weight: 200; padding-right: 2rem; margin-top: -1rem;">Type: {{gpios[i]['Type']}} </h5>
+        {%endfor%} 
+        
+        <br>
+        <br>
+        <form method="POST">
+            <input name="gpioName" value="{{ no["Name"] }}">
+            <input type="submit" value="Submit" name="update">
+            <input type="submit" value="Cancel" name="update">
+        </form>
+
+    {% else %}
+        {%for i in range(0, len)%} 
+            <h4 style="font-weight: 200;">{{gpios[i]['Name']}}</h4> 
+            <h5 style="font-weight: 200; padding-right: 2rem; margin-top: -1rem;">Type: {{gpios[i]['Type']}} </h5>
+            <form method="POST" style="margin-bottom: 2rem; margin-top: -1rem;">
+                <input type="hidden" name="gpioNo" value="{{ gpios[i]['No'] }}">
+                <input type="submit" name="editName" value="Edit Name">
+            </form>
+        {%endfor%} 
+    {% endif%}
+    
+{% endblock %}

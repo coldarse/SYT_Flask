@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="refresh" content="5">
+        <title>{% block title %}{% endblock %}</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global.css')}}" />
+    </head>
+
+    <body>
+        <div class="navbar">
+            <a href="{{ url_for('dashboard') }}" class="navbar-brand">Dashboard</a>
+            <a href="{{ url_for('gpio') }}" class="navbar-item">GPIO</a>
+        </div>
+
+        <div class="body-content">
+            {% block content %}
+            {% endblock %}
+            <hr/>
+            <footer>
+                <p>&copy; SYT Solutions 2022</p>
+            </footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}
+    Dashboard
+{% endblock %}
+{% block content %}
+    <div class="dashboard-content">
+        {%for i in range(0, len)%} 
+            <div class="card">
+                <div class="container">
+                    <h4 style="font-weight: 200;">{{gpios[i]['Name']}}</h4> 
+                    <h5 style="font-weight: 200; padding-right: 2rem; margin-top: -1rem;">
+                        <div class="flex-status">
+                            Status: {{gpios[i]['Status']}} 
+                            {% if gpios[i]['Status'] == 'Online' %}
+                                <div class='status-circle-online'></div>
+                            {% endif %}
+                
+                            {% if gpios[i]['Status'] == 'Offline' %}
+                                <div class='status-circle-offline'></div>
+                            {% endif %}
+                
+                            {% if gpios[i]['Status'] == 'Undefined' %}
+                                <div class='status-circle-undefined'></div>
+                            {% endif %}
+                        </div>
+                    </h5>
+                </div>
+            </div>
+        {%endfor%} 
+    </div>
+
+{% endblock %}
+

@@ -1,0 +1,39 @@
+{
+    "GPIOs": [
+        {
+            "Activities": [],
+            "Name": "Python3",
+            "No": 17,
+            "Status": "Offline",
+            "Type": "input"
+        },
+        {
+            "Activities": [],
+            "Name": "Water Heater",
+            "No": 27,
+            "Status": "Online",
+            "Type": "input"
+        },
+        {
+            "Activities": [],
+            "Name": "Sam",
+            "No": 22,
+            "Status": "Undefined",
+            "Type": "input"
+        },
+        {
+            "Activities": [],
+            "Name": "Testing",
+            "No": 23,
+            "Status": "Offline",
+            "Type": "input"
+        },
+        {
+            "Activities": [],
+            "Name": "SYT",
+            "No": 24,
+            "Status": "Undefined",
+            "Type": "output"
+        }
+    ]
+}
