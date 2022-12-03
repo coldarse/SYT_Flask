@@ -11,7 +11,7 @@
             "Activities": [],
             "Name": "Water Heater",
             "No": 27,
-            "Status": "Online",
+            "Status": "Offline",
             "Type": "input"
         },
         {
@@ -32,7 +32,7 @@
             "Activities": [],
             "Name": "SYT",
             "No": 24,
-            "Status": "Undefined",
+            "Status": "Offline",
             "Type": "output"
         }
     ]

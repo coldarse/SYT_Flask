@@ -2,8 +2,6 @@ from flask import Flask, render_template, json, url_for, request, redirect
 import RPi.GPIO as GPIO
 from datetime import datetime
 import os
-import time
-import threading
 
 app = Flask(__name__)
 
@@ -12,55 +10,6 @@ json_url  = os.path.join(SITE_ROOT, "static", "data.json")
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-
-first = 1;
-
-# ----- For Updating Status and Activites of Specific GPIO -----#
-def updateArray(no = None, status = None):
-    availableGPIO = json.load(open(json_url))
-    
-    for gPIO in availableGPIO['GPIOs']:
-        if str(gPIO['No']) == str(no):
-            
-            if status == 1:
-                gPIO['Status'] = 'Online'
-            elif status == 0:
-                gPIO['Status'] = 'Offline'
-            else:
-                gPIO['Status'] = 'Undefined'
-            
-            tempActivityArray = []
-                
-            for activity in gPIO['Activities']:
-                tempActivityArray.append(activity)
-                
-            tempActivityArray.append({
-                    "Time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                    "Activity": gPIO['Status']
-                })
-            
-            if len(tempActivityArray) > 5:
-                tempActivityArray.pop(0)
-                
-            gPIO['Activities'] = tempActivityArray
-                
-            with open(json_url, 'w') as file:
-                json.dump(availableGPIO, file, indent=4)
-                
-def checkStatus(indicator = None):
-    
-    while indicator == True:
-        availableGPIO = json.load(open(json_url))
-        for gPIO in availableGPIO['GPIOs']:
-            currStatus = 1 if str(gPIO['Status']) == 'Online' else 0
-            
-            status = GPIO.input(int(gPIO['No']))
-            
-            if(int(status) != int(currStatus)):
-                updateArray(int(gPIO['No']), status)
-        
-        time.sleep(1)
-        
 
 @app.route("/Dashboard/")
 def dashboard():
@@ -71,17 +20,34 @@ def dashboard():
                 int(gPIO['No']), 
                 GPIO.IN if gPIO['Type'] == 'input' else GPIO.OUT
             )
-        # status = GPIO.input(int(gPIO['No']))
-        # updateArray(int(gPIO['No']), status)
+        status = GPIO.input(int(gPIO['No']))
+        updateArray(int(gPIO['No']), status)
         
-    startChecking = threading.Thread(target=checkStatus, args=(True, ))
-    startChecking.start()
-    
+    # check status
+     
+    availableGPIO = json.load(open(json_url))
     return render_template(
-                    "dashboard.html",
-                    len = len(availableGPIO['GPIOs']),
-                    gpios = availableGPIO['GPIOs']
-                )
+            "dashboard.html",
+            len = len(availableGPIO['GPIOs']),
+            gpios = availableGPIO['GPIOs']
+        )
+            
+        
+    
+def checkStatus():
+    availableGPIO = json.load(open(json_url))
+    how_many_has_changed = 0
+    
+    for gPIO in availableGPIO['GPIOs']:
+        currStatus = 1 if str(gPIO['Status']) == 'Online' else 0
+        
+        status = GPIO.input(int(gPIO['No']))
+        
+        if(int(status) != int(currStatus)):
+            how_many_has_changed = how_many_has_changed + 1
+            updateArray(int(gPIO['No']), status)
+            
+    return how_many_has_changed
 
 @app.route("/Dashboard/", methods=['POST'])
 def dashboard_post():
@@ -147,7 +113,37 @@ def gpio_no_post(no = None):
     return redirect(url_for("gpio", no = None))
 
 
-
+# ----- For Updating Status and Activites of Specific GPIO -----#
+def updateArray(no = None, status = None):
+    availableGPIO = json.load(open(json_url))
+    
+    for gPIO in availableGPIO['GPIOs']:
+        if str(gPIO['No']) == str(no):
+            
+            if status == 1:
+                gPIO['Status'] = 'Online'
+            elif status == 0:
+                gPIO['Status'] = 'Offline'
+            else:
+                gPIO['Status'] = 'Undefined'
+            
+            tempActivityArray = []
+                
+            for activity in gPIO['Activities']:
+                tempActivityArray.append(activity)
+                
+            tempActivityArray.append({
+                    "Time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                    "Activity": gPIO['Status']
+                })
+            
+            if len(tempActivityArray) > 5:
+                tempActivityArray.pop(0)
+                
+            gPIO['Activities'] = tempActivityArray
+                
+            with open(json_url, 'w') as file:
+                json.dump(availableGPIO, file, indent=4)
                 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')

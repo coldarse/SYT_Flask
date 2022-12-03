@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="refresh" content="5">
         <title>{% block title %}{% endblock %}</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='global.css')}}" />
     </head>
@@ -20,5 +19,85 @@
                 <p>&copy; SYT Solutions 2022</p>
             </footer>
         </div>
+
+        <script>
+
+          function loop(){
+            setTimeout(function(){
+              fetch('../static/data.json', {cache: "no-cache"})
+                .then((response) => response.json())
+                .then((json) => {
+                  json.GPIOs.forEach((element) => {
+                    const x = document.getElementById(element.No.toString() + '_Status');
+                    x.innerHTML = "Status: " + element.Status.toString();
+
+                    if(element.Type == "input"){
+                      const y1 = document.getElementById(element.No.toString() + '_inputStatus');
+                      if(element.Status == "Online"){
+                        y1.className = "status-circle-online";
+                      }
+                      else if(element.Status == "Offline"){
+                        y1.className = "status-circle-offline";
+                      }
+                      else{
+                        y1.className = "status-circle-undefined";
+                      }
+                    }
+                    else{
+                      const y2 = document.getElementsByName(element.No.toString() + '_check');
+                      if(element.Status == "Online"){
+                        y2[0].checked = true;
+                      }
+                      else{
+                        y2[0].checked = false;
+                      }
+                    }
+
+                    const z = document.getElementById(element.No.toString() + '_activities');
+                    z.innerHTML = "";
+                    if(element.Activities.length != 0){
+                      element.Activities.forEach((elem) => {
+                        const paragraph = document.createElement("p");
+                        const textNode = document.createTextNode(element.Name.toString() + " is " + elem.Activity.toString() + " at " + elem.Time.toString());
+                        paragraph.appendChild(textNode);
+                        z.appendChild(paragraph);
+                      });
+                    }
+
+
+                  });
+                });
+              loop();
+            }, 1000);
+          }
+
+          loop();
+
+
+          document
+            .getElementById("toggle")
+            .addEventListener("click", e => {
+              fetch("/Dashboard/", {
+                  method: "POST",
+                  headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    check: Number(e.target.checked),
+                    gpioNo: document.getElementById('gpioNo').value
+                  })
+                })
+                .then((response) => response.json())
+                .then(({data: {val}}) => {
+                  console.log(val);
+                  const res = document.querySelector(".result");
+                  res.innerText = `client got: ${val}`;
+                })
+                .catch(err => console.error(err))
+              ;
+            })
+          ;
+        </script>
     </body>
 </html>

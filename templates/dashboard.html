@@ -10,18 +10,35 @@
                     <h4 style="font-weight: 200;">{{gpios[i]['Name']}}</h4> 
                     <h5 style="font-weight: 200; padding-right: 2rem; margin-top: -1rem;">
                         <div class="flex-status">
-                            Status: {{gpios[i]['Status']}} 
-                            {% if gpios[i]['Status'] == 'Online' %}
-                                <div class='status-circle-online'></div>
+                            <h5 id="{{gpios[i]['No']}}_Status">{{gpios[i]['Status']}}<h5> 
+                            
+                            {% if gpios[i]['Type'] == 'output' %}
+                                <input type="hidden" id="gpioNo" value="{{ gpios[i]['No'] }}">
+                                <label class="switch">
+                                    <input id="toggle" name="{{gpios[i]['No']}}_check" type="checkbox" {% if gpios[i]['Status'] == 'Online' %} checked {% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            {% else %}
+                                {% if gpios[i]['Status'] == 'Online' %}
+                                    <div id="{{gpios[i]['No']}}_inputStatus" class="status-circle-online"></div>
+                                {% endif %}
+                    
+                                {% if gpios[i]['Status'] == 'Offline' %}
+                                    <div id="{{gpios[i]['No']}}_inputStatus" class="status-circle-offline"></div>
+                                {% endif %}
+                    
+                                {% if gpios[i]['Status'] == 'Undefined' %}
+                                    <div id="{{gpios[i]['No']}}_inputStatus" class="status-circle-undefined"></div>
+                                {% endif %}
                             {% endif %}
-                
-                            {% if gpios[i]['Status'] == 'Offline' %}
-                                <div class='status-circle-offline'></div>
-                            {% endif %}
-                
-                            {% if gpios[i]['Status'] == 'Undefined' %}
-                                <div class='status-circle-undefined'></div>
-                            {% endif %}
+                        </div>
+                        <div class="Activities">
+                            <h4> Activities </h4>
+                            <section id="{{gpios[i]['No']}}_activities">
+                                {%for j in gpios[i]['Activities']%}
+                                    <p>{{gpios[i]['Name']}} is {{j.Activity}} at {{j.Time}}</p>
+                                {%endfor%}
+                            </section>
                         </div>
                     </h5>
                 </div>
