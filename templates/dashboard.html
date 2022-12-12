@@ -10,7 +10,7 @@
                     <h4 style="font-weight: 200;">{{gpios[i]['Name']}}</h4> 
                     <h5 style="font-weight: 200; padding-right: 2rem; margin-top: -1rem;">
                         <div class="flex-status">
-                            <h5 id="{{gpios[i]['No']}}_Status">{{gpios[i]['Status']}}<h5> 
+                            <h5 id="{{gpios[i]['No']}}_Status">Status: {{gpios[i]['Status']}}<h5> 
                             
                             {% if gpios[i]['Type'] == 'output' %}
                                 <input type="hidden" id="gpioNo" value="{{ gpios[i]['No'] }}">
@@ -32,14 +32,11 @@
                                 {% endif %}
                             {% endif %}
                         </div>
-                        <div class="Activities">
-                            <h4> Activities </h4>
-                            <section id="{{gpios[i]['No']}}_activities">
-                                {%for j in gpios[i]['Activities']%}
-                                    <p>{{gpios[i]['Name']}} is {{j.Activity}} at {{j.Time}}</p>
-                                {%endfor%}
-                            </section>
+                        
+                        <div>
+                            <a href="/download/{{ gpios[i]['No'] }}">Download Log</a>
                         </div>
+
                     </h5>
                 </div>
             </div>

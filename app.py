@@ -1,19 +1,19 @@
-from flask import Flask, render_template, json, url_for, request, redirect
+from flask import Flask, render_template, json, send_file, url_for, request, redirect, Response
 import RPi.GPIO as GPIO
 from datetime import datetime
 import os
 import time
 import threading
+import csv
 
 app = Flask(__name__)
 
 SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
 json_url  = os.path.join(SITE_ROOT, "static", "data.json")
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+logs_url = os.path.join(SITE_ROOT, "static", "logs")
+gPIO_header = ['Time', 'Activity']
 
-first = 1;
 
 # ----- For Updating Status and Activites of Specific GPIO -----#
 def updateArray(no = None, status = None):
@@ -21,28 +21,50 @@ def updateArray(no = None, status = None):
     
     for gPIO in availableGPIO['GPIOs']:
         if str(gPIO['No']) == str(no):
+            statusStr = ''
             
             if status == 1:
-                gPIO['Status'] = 'Online'
+                statusStr = 'Online'
             elif status == 0:
-                gPIO['Status'] = 'Offline'
+                statusStr = 'Offline'
             else:
-                gPIO['Status'] = 'Undefined'
+                statusStr = 'Undefined'
+                
+            # if gPIO['Status'] == statusStr:
+            #     continue
+            # elif gPIO['Status'] == 'Offline' and statusStr == 'Online':
+            #     statusStr = 'Online'
+            # elif gPIO['Status'] == 'Online' and statusStr == 'Offline':
+            #     statusStr = 'Offline'
             
-            tempActivityArray = []
+            gPIO['Status'] = statusStr
+            
+            # tempActivityArray = []
                 
-            for activity in gPIO['Activities']:
-                tempActivityArray.append(activity)
+            # for activity in gPIO['Activities']:
+            #     tempActivityArray.append(activity)
                 
-            tempActivityArray.append({
-                    "Time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            tempActivity = {
+                    "Time": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")[:-3],
                     "Activity": gPIO['Status']
-                })
+                }
             
-            if len(tempActivityArray) > 5:
-                tempActivityArray.pop(0)
+            # tempActivityArray.append(tempActivity)
+            
+            gpioLogUrl = os.path.join(logs_url, "GPIO" + str(gPIO['No']), "GPIO" + str(gPIO['No']) + "_" + datetime.now().strftime("%d-%m-%Y") + ".csv")
+            
+            with open(gpioLogUrl, 'a') as file:
+                writer = csv.DictWriter(file, fieldnames=gPIO_header)
+                tempArray = []
+                tempArray.append(tempActivity)
+                writer.writerows(tempArray)
+                file.close()
                 
-            gPIO['Activities'] = tempActivityArray
+            
+            # if len(tempActivityArray) > 5:
+            #     tempActivityArray.pop(0)
+                
+            # gPIO['Activities'] = tempActivityArray
                 
             with open(json_url, 'w') as file:
                 json.dump(availableGPIO, file, indent=4)
@@ -59,23 +81,37 @@ def checkStatus(indicator = None):
             if(int(status) != int(currStatus)):
                 updateArray(int(gPIO['No']), status)
         
-        time.sleep(1)
+        time.sleep(0.25)
+        
+def updateData(channel):
+    value = GPIO.input(channel)
+    updateArray(channel, value)
         
 
 @app.route("/Dashboard/")
 def dashboard():
     availableGPIO = json.load(open(json_url))
-    
+    GPIO.cleanup()
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
     for gPIO in availableGPIO['GPIOs']:
-        GPIO.setup(
+        if gPIO['Type'] == 'input':
+            GPIO.setup(
                 int(gPIO['No']), 
-                GPIO.IN if gPIO['Type'] == 'input' else GPIO.OUT
+                GPIO.IN,
+                pull_up_down=GPIO.PUD_DOWN
+            )
+            GPIO.add_event_detect(int(gPIO['No']), GPIO.BOTH, callback=updateData, bouncetime=10)
+        else:
+            GPIO.setup(
+                int(gPIO['No']), 
+                GPIO.OUT
             )
         # status = GPIO.input(int(gPIO['No']))
         # updateArray(int(gPIO['No']), status)
         
-    startChecking = threading.Thread(target=checkStatus, args=(True, ))
-    startChecking.start()
+    # startChecking = threading.Thread(target=checkStatus, args=(True, ))
+    # startChecking.start()
     
     return render_template(
                     "dashboard.html",
@@ -85,6 +121,7 @@ def dashboard():
 
 @app.route("/Dashboard/", methods=['POST'])
 def dashboard_post():
+    
     toggle = request.json.get('check')
     gpioNo = request.json.get('gpioNo')
     updateArray(gpioNo, toggle)
@@ -102,6 +139,15 @@ def dashboard_post():
             len = len(availableGPIO['GPIOs']),
             gpios = availableGPIO['GPIOs']
         )
+    
+@app.route("/download/<no>")
+def download_Log(no = None):
+    gpioNo      = no
+    gpioLogUrl = os.path.join(logs_url, "GPIO" + str(gpioNo), "GPIO" + str(gpioNo) + "_" + datetime.now().strftime("%d-%m-%Y") + ".csv")
+    return send_file(
+        gpioLogUrl,
+        as_attachment=True
+    )
 
 
 @app.route("/GPIO/")

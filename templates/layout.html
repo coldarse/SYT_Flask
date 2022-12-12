@@ -25,50 +25,42 @@
           function loop(){
             setTimeout(function(){
               fetch('../static/data.json', {cache: "no-cache"})
-                .then((response) => response.json())
-                .then((json) => {
-                  json.GPIOs.forEach((element) => {
-                    const x = document.getElementById(element.No.toString() + '_Status');
-                    x.innerHTML = "Status: " + element.Status.toString();
+              .then((response) => response.json())
+              .then((json) => {
+                localStorage.setItem("data", JSON.stringify(json))
+                json.GPIOs.forEach((element) => {
+                  const x = document.getElementById(element.No.toString() + '_Status');
+                  x.innerHTML = "Status: " + element.Status.toString();
 
-                    if(element.Type == "input"){
-                      const y1 = document.getElementById(element.No.toString() + '_inputStatus');
-                      if(element.Status == "Online"){
-                        y1.className = "status-circle-online";
-                      }
-                      else if(element.Status == "Offline"){
-                        y1.className = "status-circle-offline";
-                      }
-                      else{
-                        y1.className = "status-circle-undefined";
-                      }
+
+                  if(element.Type == "input"){
+                    const y1 = document.getElementById(element.No.toString() + '_inputStatus');
+                    if(element.Status == "Online"){
+                      y1.className = "status-circle-online";
+                      i = true;
                     }
-                    else{
-                      const y2 = document.getElementsByName(element.No.toString() + '_check');
-                      if(element.Status == "Online"){
-                        y2[0].checked = true;
-                      }
-                      else{
-                        y2[0].checked = false;
-                      }
+                    else if(element.Status == "Offline"){
+                      y1.className = "status-circle-offline";
+                      i = true;
                     }
-
-                    const z = document.getElementById(element.No.toString() + '_activities');
-                    z.innerHTML = "";
-                    if(element.Activities.length != 0){
-                      element.Activities.forEach((elem) => {
-                        const paragraph = document.createElement("p");
-                        const textNode = document.createTextNode(element.Name.toString() + " is " + elem.Activity.toString() + " at " + elem.Time.toString());
-                        paragraph.appendChild(textNode);
-                        z.appendChild(paragraph);
-                      });
+                  }
+                  else{
+                    const y2 = document.getElementsByName(element.No.toString() + '_check');
+                    if(element.Status == "Online"){
+                      y2[0].checked = true;
+                      i = true;
                     }
+                    else if(element.Status == "Offline"){
+                      y2[0].checked = false;
+                      i = true;
+                    }
+                  }
 
-
-                  });
+                  
                 });
+              });
               loop();
-            }, 1000);
+            }, 150);
           }
 
           loop();
