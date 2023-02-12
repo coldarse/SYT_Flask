@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}
+    Register
+{% endblock %}
+{% block content %}
+    <section>
+        <form method="POST">
+            <h2 class="title">Register</h2>
+            <br>
+            <label for="serialnumber">Serial Number</label>
+            <input type="text" value="{{ serialno }}" disabled>
+            <label for="regkeyforverify">Registration Key</label>
+            <input name="regkeyforverify" type="text">
+            <button type="submit" name="registerPi" value="Submit" class="buttonLoginReg">register</button>
+        </form>
+    </section>
+{% endblock %}

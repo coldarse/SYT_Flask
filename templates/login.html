@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}
+    Login
+{% endblock %}
+{% block content %}
+    <section>
+        <form method="POST">
+            <h2 class="title">Log-in</h2>
+            <br>
+            <label for="username">username</label>
+            <input name="username" type="text" value="{{ userName }}">
+            <label for="password">password</label>
+            <input name="password" type="password" value="{{ passWord }}">
+            <button type="submit" name="verifyPi" value="Submit" class="buttonLoginReg">login</button>
+        </form>
+    </section>
+{% endblock %}

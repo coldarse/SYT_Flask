@@ -3,8 +3,13 @@ import RPi.GPIO as GPIO
 from datetime import datetime
 import os
 import time
-import threading
+# import threading
 import csv
+
+import base64
+import hashlib
+from Crypto.Cipher import AES
+from Crypto import Random
 
 app = Flask(__name__)
 
@@ -13,6 +18,16 @@ json_url  = os.path.join(SITE_ROOT, "static", "data.json")
 
 logs_url = os.path.join(SITE_ROOT, "static", "logs")
 gPIO_header = ['Time', 'Activity']
+
+BLOCK_SIZE = 16
+pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
+unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+
+def encrypt(plain_text, key):
+    private_key = hashlib.sha256(key.encode("utf-8")).digest()
+    plain_text = pad(plain_text)
+    cipher = AES.new(private_key, AES.MODE_ECB)
+    return base64.b64encode(cipher.encrypt(plain_text.encode("utf-8")))
 
 
 # ----- For Updating Status and Activites of Specific GPIO -----#
@@ -30,19 +45,10 @@ def updateArray(no = None, status = None):
             else:
                 statusStr = 'Undefined'
                 
-            # if gPIO['Status'] == statusStr:
-            #     continue
-            # elif gPIO['Status'] == 'Offline' and statusStr == 'Online':
-            #     statusStr = 'Online'
-            # elif gPIO['Status'] == 'Online' and statusStr == 'Offline':
-            #     statusStr = 'Offline'
+           
             
             gPIO['Status'] = statusStr
             
-            # tempActivityArray = []
-                
-            # for activity in gPIO['Activities']:
-            #     tempActivityArray.append(activity)
                 
             tempActivity = {
                     "Time": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")[:-3],
@@ -85,8 +91,86 @@ def checkStatus(indicator = None):
         
 def updateData(channel):
     value = GPIO.input(channel)
+    
     updateArray(channel, value)
+ 
+def getserial():
+  # Extract serial from cpuinfo file
+  cpuserial = "0000000000000000"
+  try:
+    f = open('/proc/cpuinfo','r')
+    for line in f:
+      if line[0:6]=='Serial':
+        cpuserial = line[10:26]
+    f.close()
+  except:
+    cpuserial = "ERROR000000000"
+ 
+  return cpuserial
+
+def verify():
+    availableData = json.load(open(json_url))
+    storedRegkey = availableData['RegKey']
+    
+    serialno = getserial()
+    generatedRegkey = encrypt(serialno, 'syt@1234')
+    
+    
+    if "b'" + str(storedRegkey) + "'" == str(generatedRegkey):
+        return True
+    else:
+        availableData['RegKey'] = ''
+        with open(json_url, 'w') as file:
+            json.dump(availableData, file, indent=4)
+
+        return False
+    
+    
+@app.route("/")
+def splash():
+    return redirect(url_for("login"))
+
+    
+@app.route("/Login/")
+def login():
+    userName = ''
+    passWord = ''
+            
+    return render_template(
+                        "login.html",
+                        userName = userName,
+                        passWord = passWord
+                    )
         
+@app.route("/Login/", methods=['POST'])
+def verifyPi():
+    if request.form['verifyPi'] == 'Submit':
+        username = request.form['username']
+        password = request.form['password']
+        
+        if username == 'admin' and password == 'admin':
+            availableData = json.load(open(json_url))
+            regKey = availableData['RegKey']
+            
+            if regKey == '':
+                #For Registration
+                return redirect(url_for("register"))
+            else:
+                #For Verification
+                if verify() == True:
+                    return redirect(url_for("dashboard")) 
+                else:
+                    return redirect(url_for("login"))
+        else:
+            return redirect(url_for("login"))
+
+@app.route("/Register") 
+def register():
+    serialno = getserial()
+    return render_template(
+                    "register.html",
+                    serialno = serialno
+                )
 
 @app.route("/Dashboard/")
 def dashboard():
@@ -107,11 +191,6 @@ def dashboard():
                 int(gPIO['No']), 
                 GPIO.OUT
             )
-        # status = GPIO.input(int(gPIO['No']))
-        # updateArray(int(gPIO['No']), status)
-        
-    # startChecking = threading.Thread(target=checkStatus, args=(True, ))
-    # startChecking.start()
     
     return render_template(
                     "dashboard.html",
@@ -133,7 +212,6 @@ def dashboard_post():
     if toggle == 0:
         GPIO.output(int(gpioNo), GPIO.LOW)
     
-    availableGPIO = json.load(open(json_url))
     return render_template(
             "dashboard.html",
             len = len(availableGPIO['GPIOs']),
@@ -185,13 +263,28 @@ def gpio_no_post(no = None):
             if str(gPIO['No']) == str(no):
                 gPIO['Name'] = gpioName
                 break
-            
         
         with open(json_url, 'w') as file:
             json.dump(availableGPIO, file, indent=4)
         
     return redirect(url_for("gpio", no = None))
 
+@app.route("/Register/", methods=['POST'])
+def registerPi():
+    if request.form['registerPi'] == 'Submit':
+        regkey = request.form['regkeyforverify']
+        availableData = json.load(open(json_url))
+        availableData['RegKey'] = regkey
+        
+        with open(json_url, 'w') as file:
+            json.dump(availableData, file, indent=4)
+            
+        if verify() == True:
+            return redirect(url_for("dashboard")) 
+        else:
+            return redirect(url_for("login"))
+            
+            
 
 
                 
